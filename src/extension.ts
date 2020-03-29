@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { lint_active_document, Limits, lint_document } from './lizard';
+import { lint_active_document, Configuration, lint_document } from './lizard';
 
 export function activate(context: vscode.ExtensionContext) {
   let subscriptions = context.subscriptions;
@@ -45,15 +45,17 @@ export function activate(context: vscode.ExtensionContext) {
     }));
 }
 
-function read_limits(): Limits {
+function read_limits(): Configuration {
   const configuration = vscode.workspace.getConfiguration("lizard");
-  return new Limits(
+  return new Configuration(
     configuration.has("ccn")
       ? configuration.get("ccn") as number : 0,
     configuration.has("length")
       ? configuration.get("length") as number : 0,
     configuration.has("arguments")
-      ? configuration.get("arguments") as number : 0);
+      ? configuration.get("arguments") as number : 0,
+    configuration.has("modified")
+      ? configuration.get("modified") as boolean : false);
 }
 
 export function deactivate() { }

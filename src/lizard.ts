@@ -1,18 +1,20 @@
 import { spawn } from 'child_process';
 import * as vscode from 'vscode';
 
-export class Limits {
+export class Configuration {
   readonly ccn: number;
   readonly length: number;
   readonly arguments: number;
-  constructor(ccn: number, length: number, parameters: number) {
+  readonly modified: boolean;
+  constructor(ccn: number, length: number, parameters: number, modified: boolean) {
     this.ccn = ccn;
     this.length = length;
     this.arguments = parameters;
+    this.modified = modified;
   }
 }
 
-export async function lint_active_document(limits: Limits, log_channel: vscode.OutputChannel) {
+export async function lint_active_document(limits: Configuration, log_channel: vscode.OutputChannel) {
   if (vscode.window.activeTextEditor === undefined) {
     return { document: undefined, diagnostics: [] };
   }
@@ -22,7 +24,7 @@ export async function lint_active_document(limits: Limits, log_channel: vscode.O
   };
 }
 
-export async function lint_document(file: vscode.TextDocument, limits: Limits, log_channel: vscode.OutputChannel) {
+export async function lint_document(file: vscode.TextDocument, limits: Configuration, log_channel: vscode.OutputChannel) {
   // TODO Expand this list to include all the languages supported by Lizard.
   if (!['cpp'].includes(file.languageId) || file.uri.scheme !== 'file') {
     return [];
@@ -37,11 +39,12 @@ export async function lint_document(file: vscode.TextDocument, limits: Limits, l
   return create_diagnostics_for_all_output(clangTidyOut, limits, file);
 }
 
-function run_lizard(file: string, limits: Limits, log_channel: vscode.OutputChannel): Promise<string> {
+function run_lizard(file: string, limits: Configuration, log_channel: vscode.OutputChannel): Promise<string> {
   return new Promise((resolve, reject) => {
     const command_arguments = make_lizard_command(limits, file);
     const lizard = "lizard";
-    // log_channel.appendLine(`> ${lizard} ${args.join(' ')}`);
+    log_channel.appendLine(`> ${lizard} ${command_arguments.join(' ')}`);
+    log_channel.show();
 
     const process = spawn(lizard, command_arguments);
     if (process.pid) {
@@ -64,8 +67,11 @@ function run_lizard(file: string, limits: Limits, log_channel: vscode.OutputChan
   });
 }
 
-function make_lizard_command(limits: Limits, file: string | undefined) {
+function make_lizard_command(limits: Configuration, file: string | undefined) {
   let command_arguments: string[] = ["--warnings_only"];
+  if (limits.modified) {
+    command_arguments.push("--modified");
+  }
   if (limits.ccn !== 0) {
     command_arguments.push(`--CCN=${limits.ccn}`);
   }
@@ -81,7 +87,7 @@ function make_lizard_command(limits: Limits, file: string | undefined) {
   return command_arguments;
 }
 
-function create_diagnostics_for_all_output(process_output: string, limits: Limits, file: vscode.TextDocument): vscode.Diagnostic[] {
+function create_diagnostics_for_all_output(process_output: string, limits: Configuration, file: vscode.TextDocument): vscode.Diagnostic[] {
   const lines = process_output.split('\n');
   let diagnostics: vscode.Diagnostic[] = [];
   for (let line of lines) {
@@ -121,7 +127,7 @@ function extract_function_name(full_function_name: string): string {
   return full_function_name.substr(index + 1);
 }
 
-function create_diagnostics_for_one_line(details: Details, limits: Limits, file: vscode.TextDocument): vscode.Diagnostic[] {
+function create_diagnostics_for_one_line(details: Details, limits: Configuration, file: vscode.TextDocument): vscode.Diagnostic[] {
   let diagnostics: vscode.Diagnostic[] = [];
   if (limits.ccn !== undefined && details.ccn > limits.ccn) {
     diagnostics.push(create_ccn_diagnostic(details, file, limits.ccn));

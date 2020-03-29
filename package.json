@@ -57,6 +57,11 @@
 					"default": 0,
 					"description": "The maximum number of arguments for a function. Set this to 0 to disable scanning function arguments",
 					"minimum": 0
+				},
+				"lizard.modified_ccn": {
+					"type": "boolean",
+					"default": false,
+					"description": "Use modified CCN complexity analysis. This treats switch statements as having CCN 1 regardless of the number of cases."
 				}
 			}
 		}
