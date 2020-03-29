@@ -20,7 +20,7 @@ You must already have Lizard installed, and available in your `PATH`.
 
 ## Extension Settings
 
-Lizard can be controlled with these settings. Each requires a positive integer.
+Lizard can be controlled with these settings.
 
 * `lizard.ccn`: The maximum modified cyclomatic complexity of a function. Set
   this 0 to disable scanning CCN. The default value is 0.
@@ -31,6 +31,13 @@ Lizard can be controlled with these settings. Each requires a positive integer.
 * `lizard.modified_ccn`: Use modified CCN analysis. This treats switch
   statements as complexity 1 regardless of the number of cases. The default is
   off.
+
+## Commands
+
+* `Lizard: Scan the Current Document`: Use this command manually scan the
+  current file with Lizard. Note that a file is scanned automatically when it is
+  saved, and when the settings are updated. This command is most useful when an
+  external change is made, such as editing the whitelist file.
 
 ## Known Issues
 
