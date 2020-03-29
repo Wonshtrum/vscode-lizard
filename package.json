@@ -3,7 +3,7 @@
 	"publisher": "brobeson",
 	"displayName": "Lizard",
 	"description": "Run Lizard on your code.",
-	"version": "0.1",
+	"version": "0.1.0",
 	"engines": {
 		"vscode": "^1.43.0"
 	},
@@ -30,26 +30,33 @@
 	"homepage": "https://github.com/brobeson/vscode-lizard/blob/master/README.md",
 	"main": "./out/extension.js",
 	"contributes": {
+		"commands": [
+			{
+				"command": "lizard.scanActiveFile",
+				"title": "Scan the Current File",
+				"category": "Lizard"
+			}
+		],
 		"configuration": {
 			"title": "lizard",
 			"properties": {
-				"lizard.limits.ccn": {
+				"lizard.ccn": {
 					"type": "number",
-					"default": 10,
-					"description": "The maximum modified cyclomatic complexity value for a function.",
-					"minimum": 1
+					"default": 0,
+					"description": "The maximum modified cyclomatic complexity value for a function. Set this to 0 to disable scanning CCN.",
+					"minimum": 0
 				},
-				"lizard.limits.length": {
+				"lizard.length": {
 					"type": "number",
-					"default": 100,
-					"description": "The maximum length of a function.",
-					"minimum": 1
+					"default": 0,
+					"description": "The maximum length of a function. Set this to 0 to disable scanning function length.",
+					"minimum": 0
 				},
-				"lizard.limits.arguments": {
+				"lizard.arguments": {
 					"type": "number",
-					"default": 5,
-					"description": "The maximum number of arguments for a function.",
-					"minimum": 1
+					"default": 0,
+					"description": "The maximum number of arguments for a function. Set this to 0 to disable scanning function arguments",
+					"minimum": 0
 				}
 			}
 		}

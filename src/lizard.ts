@@ -4,11 +4,11 @@ import * as vscode from 'vscode';
 export class Limits {
   readonly ccn: number;
   readonly length: number;
-  readonly parameters: number;
+  readonly arguments: number;
   constructor(ccn: number, length: number, parameters: number) {
     this.ccn = ccn;
     this.length = length;
-    this.parameters = parameters;
+    this.arguments = parameters;
   }
 }
 
@@ -39,16 +39,11 @@ export async function lint_document(file: vscode.TextDocument, limits: Limits, l
 
 function run_lizard(file: string, limits: Limits, log_channel: vscode.OutputChannel): Promise<string> {
   return new Promise((resolve, reject) => {
-    const args: string[] = [
-      "--warnings_only",
-      `--CCN=${limits.ccn}`,
-      `--length=${limits.length}`,
-      `--arguments=${limits.parameters}`,
-      file];
+    const command_arguments = make_lizard_command(limits, file);
     const lizard = "lizard";
     // log_channel.appendLine(`> ${lizard} ${args.join(' ')}`);
 
-    const process = spawn(lizard, args);
+    const process = spawn(lizard, command_arguments);
     if (process.pid) {
       let output = "";
       process.stdout.on("data", data => {
@@ -67,6 +62,23 @@ function run_lizard(file: string, limits: Limits, log_channel: vscode.OutputChan
     //   log_channel.appendLine("Failed to run Lizard.");
     // }
   });
+}
+
+function make_lizard_command(limits: Limits, file: string | undefined) {
+  let command_arguments: string[] = ["--warnings_only"];
+  if (limits.ccn !== 0) {
+    command_arguments.push(`--CCN=${limits.ccn}`);
+  }
+  if (limits.length !== 0) {
+    command_arguments.push(`--length=${limits.length}`);
+  }
+  if (limits.arguments !== 0) {
+    command_arguments.push(`--arguments=${limits.arguments}`);
+  }
+  if (file !== undefined) {
+    command_arguments.push(file);
+  }
+  return command_arguments;
 }
 
 function create_diagnostics_for_all_output(process_output: string, limits: Limits, file: vscode.TextDocument): vscode.Diagnostic[] {
@@ -90,14 +102,14 @@ class Details {
   readonly line_number: number;
   readonly ccn: number;
   readonly length: number;
-  readonly parameters: number;
+  readonly arguments: number;
   constructor(full_function_name: string, line_number: number, ccn: number, length: number, parameters: number) {
     this.full_function_name = full_function_name;
     this.function_name = extract_function_name(full_function_name);
     this.line_number = line_number;
     this.ccn = ccn;
     this.length = length;
-    this.parameters = parameters;
+    this.arguments = parameters;
   }
 }
 
@@ -111,14 +123,14 @@ function extract_function_name(full_function_name: string): string {
 
 function create_diagnostics_for_one_line(details: Details, limits: Limits, file: vscode.TextDocument): vscode.Diagnostic[] {
   let diagnostics: vscode.Diagnostic[] = [];
-  if (details.ccn > limits.ccn) {
+  if (limits.ccn !== undefined && details.ccn > limits.ccn) {
     diagnostics.push(create_ccn_diagnostic(details, file, limits.ccn));
   }
-  if (details.length > limits.length) {
+  if (limits.length !== undefined && details.length > limits.length) {
     diagnostics.push(create_length_diagnostic(details, file, limits.length));
   }
-  if (details.parameters > limits.parameters) {
-    diagnostics.push(create_parameters_diagnostic(details, file, limits.parameters));
+  if (limits.arguments !== undefined && details.arguments > limits.arguments) {
+    diagnostics.push(create_parameters_diagnostic(details, file, limits.arguments));
   }
   return diagnostics;
 }
@@ -140,7 +152,7 @@ function create_length_diagnostic(details: Details, file: vscode.TextDocument, l
 function create_parameters_diagnostic(details: Details, file: vscode.TextDocument, limit: number) {
   return new vscode.Diagnostic(
     get_function_range(details, file),
-    `${details.function_name} has ${details.parameters} parameters; the maximum is ${limit}.`,
+    `${details.function_name} has ${details.arguments} parameters; the maximum is ${limit}.`,
     vscode.DiagnosticSeverity.Warning);
 }
 

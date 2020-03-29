@@ -22,12 +22,12 @@ You must already have Lizard installed, and available in your `PATH`.
 
 Lizard can be controlled with these settings. Each requires a positive integer.
 
-* `lizard.limits.ccn`: The maximum modified cyclomatic complexity of a function.
-  The default value is 10.
-* `lizard.limits.arguments`: The maximum number of arguments for a function. The
-  default value is 5.
-* `lizard.limits.length`: The maximum length of a function. The default value is
-  100.
+* `lizard.ccn`: The maximum modified cyclomatic complexity of a function. Set
+  this 0 to disable scanning CCN. The default value is 0.
+* `lizard.arguments`: The maximum number of arguments for a function. Set this
+  to 0 to disable scanning function arguments. The default value is 0.
+* `lizard.length`: The maximum length of a function. Set this to 0 to disable
+  scanning function length. The default value is 0.
 
 ## Known Issues
 

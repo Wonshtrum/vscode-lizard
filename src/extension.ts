@@ -29,6 +29,8 @@ export function activate(context: vscode.ExtensionContext) {
   // - onDidChangeTextDocument: Lizard reads the file from disk; it must be saved
   //    first.
   context.subscriptions.push(
+    vscode.commands.registerCommand('lizard.scanActiveFile', lizard_active_document));
+  context.subscriptions.push(
     vscode.workspace.onDidOpenTextDocument(lizard_active_document));
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument(lizard_active_document));
@@ -46,10 +48,12 @@ export function activate(context: vscode.ExtensionContext) {
 function read_limits(): Limits {
   const configuration = vscode.workspace.getConfiguration("lizard");
   return new Limits(
-    // TODO Test if defaults are automatically available since they are specified in package.json.
-    configuration.has("limits.ccn") ? configuration.get("limits.ccn") as number : 10,
-    configuration.has("limits.length") ? configuration.get("limits.length") as number : 50,
-    configuration.has("limits.arguments") ? configuration.get("limits.parameters") as number : 5);
+    configuration.has("ccn")
+      ? configuration.get("ccn") as number : 0,
+    configuration.has("length")
+      ? configuration.get("length") as number : 0,
+    configuration.has("arguments")
+      ? configuration.get("arguments") as number : 0);
 }
 
 export function deactivate() { }
