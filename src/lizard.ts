@@ -20,7 +20,10 @@ export async function lint_active_document(limits: Configuration, log_channel: v
   }
   return {
     document: vscode.window.activeTextEditor.document,
-    diagnostics: await lint_document(vscode.window.activeTextEditor.document, limits, log_channel)
+    diagnostics: await lint_document(
+      vscode.window.activeTextEditor.document,
+      limits,
+      log_channel)
   };
 }
 
@@ -29,14 +32,10 @@ export async function lint_document(file: vscode.TextDocument, limits: Configura
   if (!['cpp'].includes(file.languageId) || file.uri.scheme !== 'file') {
     return [];
   }
-
-  const workspaceFolder = vscode.workspace.getWorkspaceFolder(file.uri);
-  if (!workspaceFolder) {
-    return [];
-  }
-
-  const clangTidyOut = await run_lizard(file.uri.fsPath, limits, log_channel);
-  return create_diagnostics_for_all_output(clangTidyOut, limits, file);
+  return create_diagnostics_for_all_output(
+    await run_lizard(file.uri.fsPath, limits, log_channel),
+    limits,
+    file);
 }
 
 function run_lizard(file: string, limits: Configuration, log_channel: vscode.OutputChannel): Promise<string> {
