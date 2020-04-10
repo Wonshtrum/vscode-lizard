@@ -62,6 +62,10 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Use modified CCN complexity analysis. This treats switch statements as having CCN 1 regardless of the number of cases."
+				},
+				"lizard.whitelist": {
+					"type": "string",
+					"description": "The path to a white list file. If this is not set, the Lizard default is used."
 				}
 			}
 		}

@@ -6,15 +6,26 @@ export class Configuration {
   readonly length: number;
   readonly arguments: number;
   readonly modified: boolean;
-  constructor(ccn: number, length: number, parameters: number, modified: boolean) {
+  readonly whitelist: string | undefined;
+  constructor(ccn: number,
+    length: number,
+    parameters: number,
+    modified: boolean,
+    whitelist?: string) {
     this.ccn = ccn;
     this.length = length;
     this.arguments = parameters;
     this.modified = modified;
+    if (whitelist !== undefined) {
+      this.whitelist = whitelist;
+    }
   }
 }
 
-export async function lint_active_document(limits: Configuration, log_channel: vscode.OutputChannel) {
+export async function lint_active_document(
+  working_directory: string,
+  limits: Configuration,
+  log_channel: vscode.OutputChannel) {
   if (vscode.window.activeTextEditor === undefined) {
     return { document: undefined, diagnostics: [] };
   }
@@ -22,47 +33,56 @@ export async function lint_active_document(limits: Configuration, log_channel: v
     document: vscode.window.activeTextEditor.document,
     diagnostics: await lint_document(
       vscode.window.activeTextEditor.document,
+      working_directory,
       limits,
       log_channel)
   };
 }
 
-export async function lint_document(file: vscode.TextDocument, limits: Configuration, log_channel: vscode.OutputChannel) {
+export async function lint_document(
+  file: vscode.TextDocument,
+  working_directory: string,
+  limits: Configuration,
+  log_channel: vscode.OutputChannel) {
   // TODO Expand this list to include all the languages supported by Lizard.
   if (!['cpp'].includes(file.languageId) || file.uri.scheme !== 'file') {
     return [];
   }
   return create_diagnostics_for_all_output(
-    await run_lizard(file.uri.fsPath, limits, log_channel),
+    await run_lizard(file.uri.fsPath, working_directory, limits, log_channel),
     limits,
     file);
 }
 
-function run_lizard(file: string, limits: Configuration, log_channel: vscode.OutputChannel): Promise<string> {
+function run_lizard(
+  file: string,
+  working_directory: string,
+  limits: Configuration,
+  log_channel: vscode.OutputChannel): Promise<string> {
   return new Promise((resolve, reject) => {
     const command_arguments = make_lizard_command(limits, file);
     const lizard = "lizard";
     log_channel.appendLine(`> ${lizard} ${command_arguments.join(' ')}`);
     log_channel.show();
 
-    const process = spawn(lizard, command_arguments);
+    const process = spawn(lizard, command_arguments, { "cwd": working_directory });
     if (process.pid) {
       let output = "";
       process.stdout.on("data", data => {
         output += data;
       });
       process.stdout.on("end", () => {
-        // log_channel.appendLine(output);
+        log_channel.appendLine(output);
         resolve(output);
       });
       process.on("error", err => {
-        // log_channel.appendLine(err.message);
+        log_channel.appendLine(err.message);
         reject(err);
       });
     }
-    // else {
-    //   log_channel.appendLine("Failed to run Lizard.");
-    // }
+    else {
+      log_channel.appendLine("Failed to run Lizard.");
+    }
   });
 }
 
@@ -80,6 +100,9 @@ function make_lizard_command(limits: Configuration, file: string | undefined) {
   if (limits.arguments !== 0) {
     command_arguments.push(`--arguments=${limits.arguments}`);
   }
+  if (limits.whitelist !== undefined) {
+    command_arguments.push(`--whitelist=${limits.whitelist}`);
+  }
   if (file !== undefined) {
     command_arguments.push(file);
   }
@@ -91,8 +114,15 @@ function create_diagnostics_for_all_output(process_output: string, limits: Confi
   let diagnostics: vscode.Diagnostic[] = [];
   for (let line of lines) {
     if (line.length !== 0) {
-      diagnostics = diagnostics.concat(
-        create_diagnostics_for_one_line(extract_details(line), limits, file));
+      if (line.startsWith("WARNING")) {
+        if (!line.endsWith("!!!!!")) {
+          const warning = line.replace("WARNING: ", "");
+          vscode.window.showWarningMessage(warning.charAt(0).toUpperCase() + warning.slice(1));
+        }
+      } else {
+        diagnostics = diagnostics.concat(
+          create_diagnostics_for_one_line(extract_details(line), limits, file));
+      }
     }
   }
   for (let diagnostic of diagnostics) {

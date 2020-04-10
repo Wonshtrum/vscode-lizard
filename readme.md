@@ -31,6 +31,8 @@ Lizard can be controlled with these settings.
 * `lizard.modified_ccn`: Use modified CCN analysis. This treats switch
   statements as complexity 1 regardless of the number of cases. The default is
   off.
+* `lizard.whitelist`: The path to a whitelist file. The path is relative to the
+  workspace. See the lizard documentation for details.
 
 ## Commands
 
