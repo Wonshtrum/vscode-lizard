@@ -6,19 +6,17 @@ export class Configuration {
   readonly length: number;
   readonly arguments: number;
   readonly modified: boolean;
-  readonly whitelist: string | undefined;
+  readonly whitelist: string;
   constructor(ccn: number,
     length: number,
     parameters: number,
     modified: boolean,
-    whitelist?: string) {
+    whitelist: string) {
     this.ccn = ccn;
     this.length = length;
     this.arguments = parameters;
     this.modified = modified;
-    if (whitelist !== undefined) {
-      this.whitelist = whitelist;
-    }
+    this.whitelist = whitelist;
   }
 }
 
@@ -100,7 +98,7 @@ function make_lizard_command(limits: Configuration, file: string | undefined) {
   if (limits.arguments !== 0) {
     command_arguments.push(`--arguments=${limits.arguments}`);
   }
-  if (limits.whitelist !== undefined) {
+  if (limits.whitelist !== "") {
     command_arguments.push(`--whitelist=${limits.whitelist}`);
   }
   if (file !== undefined) {
@@ -203,7 +201,7 @@ function extract_details(line: string): Details {
 
 function get_function_range(details: Details, file: vscode.TextDocument): vscode.Range {
   const line_text = file.lineAt(details.line_number).text;
-  const start_character = line_text.search(details.function_name);
+  const start_character = line_text.lastIndexOf(details.function_name);
   if (start_character >= line_text.length) {
     return new vscode.Range(details.line_number, 0, details.line_number, 0);
   }
