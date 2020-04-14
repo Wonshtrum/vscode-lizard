@@ -32,7 +32,9 @@ Lizard can be controlled with these settings.
   statements as complexity 1 regardless of the number of cases. The default is
   off.
 * `lizard.whitelist`: The path to a whitelist file. The path is relative to the
-  workspace. See the lizard documentation for details.
+  workspace. See the Lizard documentation for details.
+* `lizard.extensions`: A list of Lizard extensions to run as part of the Lizard
+  command. See the Lizard documentation for details.
 
 ## Commands
 

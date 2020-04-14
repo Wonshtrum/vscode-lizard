@@ -66,6 +66,10 @@
 				"lizard.whitelist": {
 					"type": "string",
 					"description": "The path to a white list file. If this is not set, the Lizard default is used."
+				},
+				"lizard.extensions": {
+					"type": "array",
+					"description": "A list of Lizard extensions to include on the command line. See the Lizard documentation for information about available extensions."
 				}
 			}
 		}

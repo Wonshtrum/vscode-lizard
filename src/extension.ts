@@ -70,7 +70,9 @@ function read_limits(): Configuration {
     configuration.has("modified")
       ? configuration.get("modified") as boolean : false,
     configuration.has("whitelist")
-      ? configuration.get("whitelist") as string : "");
+      ? configuration.get("whitelist") as string : "",
+    configuration.has("extensions")
+      ? configuration.get("extensions") as string[] : []);
 }
 
 export function deactivate() { }

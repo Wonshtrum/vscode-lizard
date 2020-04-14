@@ -7,16 +7,19 @@ export class Configuration {
   readonly arguments: number;
   readonly modified: boolean;
   readonly whitelist: string;
+  readonly extensions: string[];
   constructor(ccn: number,
     length: number,
     parameters: number,
     modified: boolean,
-    whitelist: string) {
+    whitelist: string,
+    extensions: string[]) {
     this.ccn = ccn;
     this.length = length;
     this.arguments = parameters;
     this.modified = modified;
     this.whitelist = whitelist;
+    this.extensions = extensions;
   }
 }
 
@@ -65,13 +68,24 @@ function run_lizard(
 
     const process = spawn(lizard, command_arguments, { "cwd": working_directory });
     if (process.pid) {
-      let output = "";
+      let stdout = "";
+      let stderr = "";
       process.stdout.on("data", data => {
-        output += data;
+        stdout += data;
       });
       process.stdout.on("end", () => {
-        log_channel.appendLine(output);
-        resolve(output);
+        log_channel.appendLine(stdout);
+        resolve(stdout);
+      });
+      process.stderr.on("data", data => {
+        stderr += data;
+      });
+      process.stderr.on("end", () => {
+        if (stderr.length > 0) {
+          const exception_message = extract_exception_message(stderr);
+          vscode.window.showErrorMessage(
+            `Lizard failed; here's the exception message:\n${exception_message}`);
+        }
       });
       process.on("error", err => {
         log_channel.appendLine(err.message);
@@ -82,6 +96,11 @@ function run_lizard(
       log_channel.appendLine("Failed to run Lizard.");
     }
   });
+}
+
+function extract_exception_message(process_output: string): string {
+  const lines = process_output.trim().split('\n');
+  return lines[lines.length - 1];
 }
 
 function make_lizard_command(limits: Configuration, file: string | undefined) {
@@ -101,6 +120,9 @@ function make_lizard_command(limits: Configuration, file: string | undefined) {
   if (limits.whitelist !== "") {
     command_arguments.push(`--whitelist=${limits.whitelist}`);
   }
+  for (const extension of limits.extensions) {
+    command_arguments.push(`--extension=${extension}`);
+  }
   if (file !== undefined) {
     command_arguments.push(file);
   }
@@ -108,19 +130,17 @@ function make_lizard_command(limits: Configuration, file: string | undefined) {
 }
 
 function create_diagnostics_for_all_output(process_output: string, limits: Configuration, file: vscode.TextDocument): vscode.Diagnostic[] {
-  const lines = process_output.split('\n');
+  const lines = process_output.trim().split('\n');
   let diagnostics: vscode.Diagnostic[] = [];
-  for (let line of lines) {
-    if (line.length !== 0) {
-      if (line.startsWith("WARNING")) {
-        if (!line.endsWith("!!!!!")) {
-          const warning = line.replace("WARNING: ", "");
-          vscode.window.showWarningMessage(warning.charAt(0).toUpperCase() + warning.slice(1));
-        }
-      } else {
-        diagnostics = diagnostics.concat(
-          create_diagnostics_for_one_line(extract_details(line), limits, file));
+  for (const line of lines) {
+    if (line.startsWith("WARNING")) {
+      if (!line.endsWith("!!!!!")) {
+        const warning = line.replace("WARNING: ", "");
+        vscode.window.showWarningMessage(warning.charAt(0).toUpperCase() + warning.slice(1));
       }
+    } else {
+      diagnostics = diagnostics.concat(
+        create_diagnostics_for_one_line(extract_details(line), limits, file));
     }
   }
   for (let diagnostic of diagnostics) {
@@ -147,6 +167,9 @@ class Details {
 }
 
 function extract_function_name(full_function_name: string): string {
+  if (full_function_name === "*global*") {
+    return full_function_name;
+  }
   const index = full_function_name.lastIndexOf(":");
   if (index === undefined) {
     return full_function_name;
@@ -170,22 +193,34 @@ function create_diagnostics_for_one_line(details: Details, limits: Configuration
 
 function create_ccn_diagnostic(details: Details, file: vscode.TextDocument, limit: number) {
   return new vscode.Diagnostic(
-    get_function_range(details, file),
-    `${details.function_name} has ${details.ccn} CCN; the maximum is ${limit}.`,
+    details.function_name === "*global*"
+      ? new vscode.Range(0, 0, file.lineCount, 0)
+      : get_function_range(details, file),
+    details.function_name === "*global*"
+      ? `The global scope has ${details.ccn} CCN; the maximum is ${limit}.`
+      : `${details.function_name} has ${details.ccn} CCN; the maximum is ${limit}.`,
     vscode.DiagnosticSeverity.Warning);
 }
 
 function create_length_diagnostic(details: Details, file: vscode.TextDocument, limit: number) {
   return new vscode.Diagnostic(
-    get_function_range(details, file),
-    `${details.function_name} has ${details.length} length; the maximum is ${limit}.`,
+    details.function_name === "*global*"
+      ? new vscode.Range(0, 0, file.lineCount, 0)
+      : get_function_range(details, file),
+    details.function_name === "*global*"
+      ? `The global scope has ${details.length} length; the maximum is ${limit}.`
+      : `${details.function_name} has ${details.length} length; the maximum is ${limit}.`,
     vscode.DiagnosticSeverity.Warning);
 }
 
 function create_parameters_diagnostic(details: Details, file: vscode.TextDocument, limit: number) {
   return new vscode.Diagnostic(
-    get_function_range(details, file),
-    `${details.function_name} has ${details.arguments} parameters; the maximum is ${limit}.`,
+    details.function_name === "*global*"
+      ? new vscode.Range(0, 0, file.lineCount, 0)
+      : get_function_range(details, file),
+    details.function_name === "*global*"
+      ? `The global scope has ${details.arguments} parameters; the maximum is ${limit}.`
+      : `${details.function_name} has ${details.arguments} parameters; the maximum is ${limit}.`,
     vscode.DiagnosticSeverity.Warning);
 }
 
