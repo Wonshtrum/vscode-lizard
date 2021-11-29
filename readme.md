@@ -14,10 +14,6 @@ This extension reports diagnostics for functions that:
 
 The limits can be specified in your configuration JSON file.
 
-## Requirements
-
-You must already have Lizard installed, and available in your `PATH`.
-
 ## Extension Settings
 
 Lizard can be controlled with these settings.
@@ -35,6 +31,8 @@ Lizard can be controlled with these settings.
   workspace. See the Lizard documentation for details.
 * `lizard.extensions`: A list of Lizard extensions to run as part of the Lizard
   command. See the Lizard documentation for details.
+* `lizard.file_extensions`: A list of file extensions on which lizard will run.
+* `lizard.path`: Absolute path to Lizard CLI.
 
 ## Commands
 
@@ -47,8 +45,6 @@ Lizard can be controlled with these settings.
 
 * A file cannot be scanned during editing. Lizard reads the file from disk, so
   you have save your changes which will trigger scanning the file.
-* Only C++ is supported *by the extension*. Support for other languages will be
-  added as soon as possible.
 
 ## Release Notes
 

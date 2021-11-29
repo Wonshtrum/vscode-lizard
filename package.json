@@ -70,6 +70,21 @@
 				"lizard.extensions": {
 					"type": "array",
 					"description": "A list of Lizard extensions to include on the command line. See the Lizard documentation for information about available extensions."
+				},
+				"lizard.file_extensions": {
+					"type": "array",
+					"description": "A list of file extensions on which lizard will run.",
+					"default": [
+						"py",
+						"c",
+						"cpp",
+						"f90"
+					]
+				},
+				"lizard.path": {
+					"type": "string",
+					"description": "Absolute path to Lizard CLI.",
+					"default": "lizard"
 				}
 			}
 		}
@@ -87,12 +102,15 @@
 		"@types/mocha": "^7.0.1",
 		"@types/node": "^12.11.7",
 		"@types/vscode": "^1.43.0",
-		"eslint": "^6.8.0",
-		"@typescript-eslint/parser": "^2.18.0",
 		"@typescript-eslint/eslint-plugin": "^2.18.0",
+		"@typescript-eslint/parser": "^2.18.0",
+		"eslint": "^6.8.0",
 		"glob": "^7.1.6",
 		"mocha": "^7.0.1",
 		"typescript": "^3.7.5",
 		"vscode-test": "^1.3.0"
+	},
+	"dependencies": {
+		"vsce": "^2.5.0"
 	}
 }

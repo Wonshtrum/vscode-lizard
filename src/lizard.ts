@@ -8,18 +8,24 @@ export class Configuration {
   readonly modified: boolean;
   readonly whitelist: string;
   readonly extensions: string[];
+  readonly file_extensions: string[];
+  readonly path: string;
   constructor(ccn: number,
     length: number,
     parameters: number,
     modified: boolean,
     whitelist: string,
-    extensions: string[]) {
+    extensions: string[],
+    file_extensions: string[],
+    path: string) {
     this.ccn = ccn;
     this.length = length;
     this.arguments = parameters;
     this.modified = modified;
     this.whitelist = whitelist;
     this.extensions = extensions;
+    this.file_extensions = file_extensions;
+    this.path = path;
   }
 }
 
@@ -45,8 +51,7 @@ export async function lint_document(
   working_directory: string,
   limits: Configuration,
   log_channel: vscode.OutputChannel) {
-  // TODO Expand this list to include all the languages supported by Lizard.
-  if (!['cpp'].includes(file.languageId) || file.uri.scheme !== 'file') {
+  if (!limits.file_extensions.includes(file.fileName.split(".").slice(-1)[0]) || file.uri.scheme !== 'file') {
     return [];
   }
   return create_diagnostics_for_all_output(
@@ -62,7 +67,7 @@ function run_lizard(
   log_channel: vscode.OutputChannel): Promise<string> {
   return new Promise((resolve, reject) => {
     const command_arguments = make_lizard_command(limits, file);
-    const lizard = "lizard";
+    let lizard = limits.path;
     log_channel.appendLine(`> ${lizard} ${command_arguments.join(' ')}`);
     log_channel.show();
 

@@ -43,8 +43,8 @@ export function activate(context: vscode.ExtensionContext) {
   // rescan after the whitelist file is saved.
   context.subscriptions.push(
     vscode.commands.registerCommand('lizard.scanActiveFile', lizard_active_document));
-  context.subscriptions.push(
-    vscode.workspace.onDidOpenTextDocument(lizard_active_document));
+  /*context.subscriptions.push(
+    vscode.workspace.onDidOpenTextDocument(lizard_active_document));*/
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument(lizard_active_document));
   context.subscriptions.push(
@@ -53,7 +53,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidChangeConfiguration(config => {
       if (config.affectsConfiguration('lizard')) {
         limits = read_limits();
-        vscode.workspace.textDocuments.forEach(lizard_document);
+        //vscode.workspace.textDocuments.forEach(lizard_document);
       }
     }));
 }
@@ -72,7 +72,11 @@ function read_limits(): Configuration {
     configuration.has("whitelist")
       ? configuration.get("whitelist") as string : "",
     configuration.has("extensions")
-      ? configuration.get("extensions") as string[] : []);
+      ? configuration.get("extensions") as string[] : [],
+    configuration.has("file_extensions")
+      ? configuration.get("file_extensions") as string[] : [],
+    configuration.has("path")
+      ? configuration.get("path") as string : "lizard");
 }
 
 export function deactivate() { }
